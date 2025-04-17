@@ -10,8 +10,10 @@ import {
     StatusBar,
     TouchableWithoutFeedback,
     Keyboard,
+    Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
 
 export default function SignIn() {
   const router = useRouter(); 
@@ -20,8 +22,37 @@ export default function SignIn() {
 
   const handleLogin = () => {
     alert("Logged in successfully!");
-    router.push('/home'); 
+    //router.push('/(tabs)'); 
+    router.push('/(tabs)/index');
+
   };
+
+  const OnSignInClick=() => { 
+    const auth = getAuth();
+
+    if(!email||!password){
+      Alert.alert("Please fill in all fields");
+      return;
+    }
+
+    signInWithEmailAndPassword(auth, email, password)
+    .then((userCredential) => {
+        // Signed in 
+        const user = userCredential.user;
+        console.log(user);
+        router.push('(tabs)');
+        // ...
+    })
+    .catch((error) => {
+        const errorCode = error.code;
+        const errorMessage = error.message;
+
+        if(errorCode === 'auth/invalid-credentials'){ 
+          Alert.alert('Invalid Email or Password');
+        }
+    });
+
+  }
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
@@ -37,19 +68,21 @@ export default function SignIn() {
             style={styles.input}
             placeholder="Enter your email"
             value={email}
-            onChangeText={(text) => setEmail(text)}
+            onChangeText={(value) => setEmail(value)}
             keyboardType="email-address"
           />
           <TextInput
             style={styles.input}
             placeholder="Enter your password"
             value={password}
-            onChangeText={(text) => setPassword(text)}
+            onChangeText={(value) => setPassword(value)}
             secureTextEntry
           />
         </View>
 
-        <TouchableOpacity style={styles.buttonLogin} >
+        <TouchableOpacity style={styles.buttonLogin} 
+        onPress={OnSignInClick}
+        >
           <Text style={styles.buttonLoginText}>Login</Text>
         </TouchableOpacity>
 

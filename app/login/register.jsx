@@ -9,9 +9,12 @@ import {
     TouchableOpacity, 
     StatusBar,
     TouchableWithoutFeedback,
-    Keyboard
+    Keyboard, 
+    Alert
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { auth } from './../../config/FirebaseConfig'; 
+import { createUserWithEmailAndPassword } from 'firebase/auth';
 
 export default function Register() {
   const router = useRouter();
@@ -25,21 +28,43 @@ export default function Register() {
   const toggleShowPassword = () => setShowPassword((prev) => !prev);
   const toggleShowConfirmPassword = () => setShowConfirmPassword((prev) => !prev);
 
+  const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
   const isPasswordLengthValid = password.length >= 8 && password.length <= 23;
   const isPasswordMatch = password === confirmPassword && confirmPassword.length > 0;
+  const isFormValid = isEmailValid && isPasswordLengthValid && isPasswordMatch;
 
-  const handleRegister = () => {
-    if (!isPasswordLengthValid) {
-      alert("Password must be between 8 and 23 characters.");
-      return;
-    }
-    if (!isPasswordMatch) {
-      alert("Passwords do not match!");
+  const onCreateAccount = () => {
+    if (!email || !password) {
+      Alert.alert("Please fill in all fields");
       return;
     }
 
-    alert("Registered Successfully!");
-    router.push('/login'); 
+    if (!isEmailValid) {
+      Alert.alert("Please enter a valid email address.");
+      return;
+    }
+
+    createUserWithEmailAndPassword(auth, email, password)
+      .then((userCredential) => {
+        const user = userCredential.user;
+        console.log(user);
+        Alert.alert("Account created successfully!");
+        // router.push('(tabs)');
+        router.push('/login/signIn'); 
+      })
+      .catch((error) => {
+        const errorCode = error.code;
+
+        if (errorCode === 'auth/email-already-in-use') {
+          alert('Email already in use');
+        } else if (errorCode === 'auth/invalid-email') {
+          alert('Invalid email address');
+        } else if (errorCode === 'auth/weak-password') {
+          alert('Password is too weak');
+        } else {
+          alert(error.message);
+        }
+      });
   };
 
   return (
@@ -90,7 +115,6 @@ export default function Register() {
             </TouchableOpacity>
           </View>
 
-          {/* Password length warning */}
           {password.length > 0 && !isPasswordLengthValid && (
             <Text style={styles.warningText}>
               Password must be between 8 and 23 characters
@@ -117,7 +141,6 @@ export default function Register() {
             </TouchableOpacity>
           </View>
 
-          {/* Password match warning */}
           {confirmPassword.length > 0 && !isPasswordMatch && (
             <Text style={styles.warningText}>
               Passwords do not match
@@ -128,10 +151,10 @@ export default function Register() {
         <TouchableOpacity
           style={[
             styles.buttonRegister,
-            (!isPasswordLengthValid || !isPasswordMatch) && { backgroundColor: '#ccc' }
+            !isFormValid && { backgroundColor: '#ccc' },
           ]}
-          onPress={handleRegister}
-          disabled={!isPasswordLengthValid || !isPasswordMatch}
+          onPress={onCreateAccount}
+          disabled={!isFormValid}
         >
           <Text style={styles.buttonRegisterText}>Register</Text>
         </TouchableOpacity>
@@ -141,9 +164,9 @@ export default function Register() {
             Already have an account?{" "}
             <Text
               style={styles.loginText}
-              onPress={() => router.push('login/signIn')}
+              onPress={() => router.push('/login/signIn')}
             >
-              Login
+              Login here.
             </Text>
           </Text>
         </View>

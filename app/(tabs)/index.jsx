@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import React from 'react';
-import { useRouter } from 'expo-router';
+import { Redirect, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons'; 
 
 const features = [
@@ -19,6 +19,9 @@ export default function HomeScreen() {
     <View style={styles.container}>
       <View style={styles.topSection}>
         <Text style={styles.welcome}>Welcome, User!</Text>
+
+       {/* <Redirect href={'(tabs)'} />*/}
+
         <View style={styles.topRightButtons}>
           <TouchableOpacity style={styles.smallButton} onPress={() => router.push('/Profile')}>
             <Ionicons name="person-outline" size={20} color="#007bff" />
